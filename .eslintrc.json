@@ -1,0 +1,13 @@
+{
+  "extends": "airbnb-base",
+  "env": {
+    "node": true,
+    "es2021": true
+  },
+  "rules": {
+    "no-console": "off", // Izinkan console.log untuk development
+    "no-underscore-dangle": "off", // Izinkan underscore dangle untuk properti privat_
+    "class-methods-use-this": "off", // Izinkan method class tanpa 'this' jika diperlukan
+    "consistent-return": "off" // Izinkan fungsi tanpa return eksplisit jika tidak selalu mengembalikan nilai
+  }
+}
