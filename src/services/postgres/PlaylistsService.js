@@ -1,20 +1,24 @@
 const { nanoid } = require('nanoid');
 const { Pool } = require('pg');
-const InvariantError = require('../../exceptions/InvariantError'); //
-const NotFoundError = require('../../exceptions/NotFoundError'); //
-const AuthorizationError = require('../../exceptions/AuthorizationError'); // Anda perlu membuat file ini di src/exceptions/AuthorizationError.js
+const InvariantError = require('../../exceptions/InvariantError');
+const NotFoundError = require('../../exceptions/NotFoundError');
+const AuthorizationError = require('../../exceptions/AuthorizationError');
 
 class PlaylistsService {
-  constructor(pool, collaborationsService = null) {
-    // collaborationsService bersifat opsional untuk Kriteria Opsional 1
+  constructor(
+    pool,
+    collaborationsService = null,
+    playlistActivitiesService = null
+  ) {
     this._pool = pool;
-    this._collaborationsService = collaborationsService; // Untuk Kriteria Opsional 1
+    this._collaborationsService = collaborationsService;
+    this._playlistActivitiesService = playlistActivitiesService;
   }
 
   async addPlaylist({ name, owner }) {
     const id = `playlist-${nanoid(16)}`;
     const query = {
-      text: 'INSERT INTO playlists(id, name, owner) VALUES($1, $2, $3) RETURNING id', //
+      text: 'INSERT INTO playlists(id, name, owner) VALUES($1, $2, $3) RETURNING id',
       values: [id, name, owner],
     };
 
@@ -26,37 +30,28 @@ class PlaylistsService {
     return result.rows[0].id;
   }
 
-  async getPlaylists(owner) {
-    // Untuk Kriteria Opsional 1 (Kolaborasi), query ini perlu dimodifikasi
-    // agar juga mengambil playlist dimana user adalah kolaborator.
-    // Untuk sekarang, kita buat versi dasar yang hanya mengambil playlist milik owner.
+  async getPlaylists(userId) {
     const query = {
-      text: `SELECT p.id, p.name, u.username
-             FROM playlists p
-             LEFT JOIN users u ON u.id = p.owner
-             WHERE p.owner = $1`, // Query dasar
-      // Jika Kriteria Opsional 1 (Kolaborasi) diimplementasikan, query akan lebih kompleks:
-      // text: `SELECT DISTINCT p.id, p.name, u.username
-      //        FROM playlists p
-      //        LEFT JOIN users u ON u.id = p.owner
-      //        LEFT JOIN collaborations c ON c.playlist_id = p.id
-      //        WHERE p.owner = $1 OR c.user_id = $1`,
-      values: [owner],
+      text: `
+        SELECT DISTINCT p.id, p.name, u.username
+        FROM playlists p
+        LEFT JOIN users u ON u.id = p.owner
+        LEFT JOIN collaborations c ON c.playlist_id = p.id
+        WHERE p.owner = $1 OR c.user_id = $1
+      `,
+      values: [userId],
     };
     const result = await this._pool.query(query);
     return result.rows;
   }
 
-  async getPlaylistById(id) {
-    // Metode ini akan digunakan untuk GET /playlists/{id}/songs
-    // dan juga untuk verifikasi kepemilikan pada operasi lain.
-    // Akan mengambil detail playlist dan lagu-lagunya.
+  async getPlaylistById(playlistId) {
     const playlistQuery = {
       text: `SELECT p.id, p.name, u.username
              FROM playlists p
              LEFT JOIN users u ON u.id = p.owner
              WHERE p.id = $1`,
-      values: [id],
+      values: [playlistId],
     };
     const playlistResult = await this._pool.query(playlistQuery);
 
@@ -68,8 +63,8 @@ class PlaylistsService {
       text: `SELECT s.id, s.title, s.performer
              FROM songs s
              JOIN playlist_songs ps ON s.id = ps.song_id
-             WHERE ps.playlist_id = $1`, //
-      values: [id],
+             WHERE ps.playlist_id = $1`,
+      values: [playlistId],
     };
     const songsResult = await this._pool.query(songsQuery);
 
@@ -79,11 +74,11 @@ class PlaylistsService {
     return playlist;
   }
 
-  async deletePlaylistById(id, owner) {
-    await this.verifyPlaylistOwner(id, owner);
+  async deletePlaylistById(playlistId, owner) {
+    await this.verifyPlaylistOwner(playlistId, owner);
     const query = {
-      text: 'DELETE FROM playlists WHERE id = $1 RETURNING id', //
-      values: [id],
+      text: 'DELETE FROM playlists WHERE id = $1 RETURNING id',
+      values: [playlistId],
     };
     const result = await this._pool.query(query);
 
@@ -93,16 +88,11 @@ class PlaylistsService {
   }
 
   async addSongToPlaylist(playlistId, songId, userId) {
-    // Verifikasi apakah lagu ada (opsional, tergantung SongsService)
-    // Untuk ini, kita asumsikan SongsService memiliki metode getSongById
-    // const songsService = new SongsService(this._pool); // Atau di-inject jika perlu
-    // await songsService.getSongById(songId); // Ini akan melempar NotFoundError jika lagu tidak ada
-
-    await this.verifyPlaylistAccess(playlistId, userId); // Memeriksa kepemilikan atau kolaborasi
+    await this.verifyPlaylistAccess(playlistId, userId);
 
     const id = `playlistsong-${nanoid(16)}`;
     const query = {
-      text: 'INSERT INTO playlist_songs(id, playlist_id, song_id) VALUES($1, $2, $3) RETURNING id', //
+      text: 'INSERT INTO playlist_songs(id, playlist_id, song_id) VALUES($1, $2, $3) RETURNING id',
       values: [id, playlistId, songId],
     };
     const result = await this._pool.query(query);
@@ -110,14 +100,22 @@ class PlaylistsService {
     if (!result.rows.length) {
       throw new InvariantError('Lagu gagal ditambahkan ke playlist');
     }
-    // Untuk Kriteria Opsional 2 (Activities), tambahkan pencatatan di sini
+
+    if (this._playlistActivitiesService) {
+      await this._playlistActivitiesService.addActivity(
+        playlistId,
+        songId,
+        userId,
+        'add'
+      );
+    }
   }
 
   async deleteSongFromPlaylist(playlistId, songId, userId) {
-    await this.verifyPlaylistAccess(playlistId, userId); // Memeriksa kepemilikan atau kolaborasi
+    await this.verifyPlaylistAccess(playlistId, userId);
 
     const query = {
-      text: 'DELETE FROM playlist_songs WHERE playlist_id = $1 AND song_id = $2 RETURNING id', //
+      text: 'DELETE FROM playlist_songs WHERE playlist_id = $1 AND song_id = $2 RETURNING id',
       values: [playlistId, songId],
     };
     const result = await this._pool.query(query);
@@ -127,15 +125,24 @@ class PlaylistsService {
         'Lagu gagal dihapus dari playlist. Mungkin lagu tidak ada di playlist ini.'
       );
     }
-    // Untuk Kriteria Opsional 2 (Activities), tambahkan pencatatan di sini
+
+    if (this._playlistActivitiesService) {
+      await this._playlistActivitiesService.addActivity(
+        playlistId,
+        songId,
+        userId,
+        'delete'
+      );
+    }
   }
 
-  async verifyPlaylistOwner(id, owner) {
+  async verifyPlaylistOwner(playlistId, owner) {
     const query = {
-      text: 'SELECT owner FROM playlists WHERE id = $1', //
-      values: [id],
+      text: 'SELECT owner FROM playlists WHERE id = $1',
+      values: [playlistId],
     };
     const result = await this._pool.query(query);
+
     if (!result.rows.length) {
       throw new NotFoundError('Playlist tidak ditemukan');
     }
@@ -146,14 +153,12 @@ class PlaylistsService {
   }
 
   async verifyPlaylistAccess(playlistId, userId) {
-    // Metode ini akan memeriksa apakah user adalah owner atau kolaborator
     try {
       await this.verifyPlaylistOwner(playlistId, userId);
     } catch (error) {
       if (error instanceof NotFoundError) {
-        throw error; // Playlistnya memang tidak ada
+        throw error;
       }
-      // Jika bukan owner, cek apakah dia kolaborator (jika Kriteria Opsional 1 diimplementasikan)
       if (this._collaborationsService) {
         const collaboration =
           await this._collaborationsService.verifyCollaborator(
@@ -166,7 +171,6 @@ class PlaylistsService {
           );
         }
       } else {
-        // Jika tidak ada collaborationsService (belum implementasi fitur kolaborasi)
         throw new AuthorizationError(
           'Anda tidak berhak mengakses resource ini'
         );

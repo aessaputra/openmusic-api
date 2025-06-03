@@ -4,52 +4,50 @@ const Hapi = require('@hapi/hapi');
 const { Pool } = require('pg');
 const Jwt = require('@hapi/jwt');
 
-// Exceptions
-const ClientError = require('./exceptions/ClientError'); //
+const ClientError = require('./exceptions/ClientError');
 
-// Albums
-const albumsPlugin = require('./api/albums'); //
-const AlbumsService = require('./services/postgres/AlbumsService'); //
-const AlbumsValidator = require('./validator/albums'); //
+const albumsPlugin = require('./api/albums');
+const AlbumsService = require('./services/postgres/AlbumsService');
+const AlbumsValidator = require('./validator/albums');
 
-// Songs
-const songsPlugin = require('./api/songs'); //
-const SongsService = require('./services/postgres/SongsService'); //
-const SongsValidator = require('./validator/songs'); //
+const songsPlugin = require('./api/songs');
+const SongsService = require('./services/postgres/SongsService');
+const SongsValidator = require('./validator/songs');
 
-// Users
-const usersPlugin = require('./api/users'); // Asumsikan file ini sudah dibuat
-const UsersService = require('./services/postgres/UsersService'); // Asumsikan file ini sudah dibuat
-const UsersValidator = require('./validator/users'); // Asumsikan file ini sudah dibuat
+const usersPlugin = require('./api/users');
+const UsersService = require('./services/postgres/UsersService');
+const UsersValidator = require('./validator/users');
 
-// Authentications
-const authenticationsPlugin = require('./api/authentications'); // Asumsikan file ini sudah dibuat
-const AuthenticationsService = require('./services/postgres/AuthenticationsService'); // Asumsikan file ini sudah dibuat
-const AuthenticationsValidator = require('./validator/authentications'); // Asumsikan file ini sudah dibuat
-const TokenManager = require('./tokenize/TokenManager'); // Asumsikan file ini sudah dibuat
+const authenticationsPlugin = require('./api/authentications');
+const AuthenticationsService = require('./services/postgres/AuthenticationsService');
+const AuthenticationsValidator = require('./validator/authentications');
+const TokenManager = require('./tokenize/TokenManager');
 
-// Playlists - BARU
-const playlistsPlugin = require('./api/playlists'); // Asumsikan file ini sudah dibuat
-const PlaylistsService = require('./services/postgres/PlaylistsService'); // Asumsikan file ini sudah dibuat
-const PlaylistsValidator = require('./validator/playlists'); // Asumsikan file ini sudah dibuat
+const playlistsPlugin = require('./api/playlists');
+const PlaylistsService = require('./services/postgres/PlaylistsService');
+const PlaylistsValidator = require('./validator/playlists');
 
-// Collaborations - BARU (untuk Kriteria Opsional, bisa dikomentari jika belum)
-// const collaborationsPlugin = require('./api/collaborations');
-// const CollaborationsService = require('./services/postgres/CollaborationsService');
-// const CollaborationsValidator = require('./validator/collaborations');
+const collaborationsPlugin = require('./api/collaborations');
+const CollaborationsService = require('./services/postgres/CollaborationsService');
+const CollaborationsValidator = require('./validator/collaborations');
+
+const PlaylistActivitiesService = require('./services/postgres/PlaylistActivitiesService');
 
 const init = async () => {
-  const pool = new Pool(); // Pastikan konfigurasi Pool sudah sesuai
+  const pool = new Pool();
 
-  // Inisialisasi services
   const albumsService = new AlbumsService(pool);
   const songsService = new SongsService(pool);
   const usersService = new UsersService(pool);
   const authenticationsService = new AuthenticationsService(pool);
-  // const collaborationsService = new CollaborationsService(pool); // Untuk Kriteria Opsional
-  // Saat menginisialisasi PlaylistsService, Anda mungkin perlu menyertakan collaborationsService jika fitur kolaborasi aktif
-  // const playlistsService = new PlaylistsService(pool, collaborationsService);
-  const playlistsService = new PlaylistsService(pool); // Versi dasar tanpa kolaborasi dulu
+  const collaborationsService = new CollaborationsService(pool);
+  const playlistActivitiesService = new PlaylistActivitiesService(pool);
+
+  const playlistsService = new PlaylistsService(
+    pool,
+    collaborationsService,
+    playlistActivitiesService
+  );
 
   const server = Hapi.server({
     port: process.env.PORT || 5000,
@@ -61,14 +59,12 @@ const init = async () => {
     },
   });
 
-  // Registrasi plugin eksternal
   await server.register([
     {
       plugin: Jwt,
     },
   ]);
 
-  // Mendefinisikan strategi autentikasi jwt
   server.auth.strategy('openmusic_jwt', 'jwt', {
     keys: process.env.ACCESS_TOKEN_KEY,
     verify: {
@@ -85,28 +81,18 @@ const init = async () => {
     }),
   });
 
-  // Registrasi plugin internal
   await server.register([
     {
       plugin: albumsPlugin,
-      options: {
-        service: albumsService,
-        validator: AlbumsValidator,
-      },
+      options: { service: albumsService, validator: AlbumsValidator },
     },
     {
       plugin: songsPlugin,
-      options: {
-        service: songsService,
-        validator: SongsValidator,
-      },
+      options: { service: songsService, validator: SongsValidator },
     },
     {
       plugin: usersPlugin,
-      options: {
-        service: usersService,
-        validator: UsersValidator,
-      },
+      options: { service: usersService, validator: UsersValidator },
     },
     {
       plugin: authenticationsPlugin,
@@ -118,32 +104,29 @@ const init = async () => {
       },
     },
     {
-      // BARU
       plugin: playlistsPlugin,
       options: {
         playlistsService,
-        songsService, // Diperlukan oleh PlaylistsHandler untuk validasi songId
+        songsService,
         validator: PlaylistsValidator,
-        // collaborationsService, // Tambahkan jika Kriteria Opsional Kolaborasi diaktifkan
+        playlistActivitiesService,
       },
     },
-    // { // BARU - Untuk Kriteria Opsional Kolaborasi
-    //   plugin: collaborationsPlugin,
-    //   options: {
-    //     collaborationsService,
-    //     playlistsService, // Diperlukan untuk memverifikasi owner playlist
-    //     usersService, // Diperlukan untuk memverifikasi user yg akan dikolaborasikan
-    //     validator: CollaborationsValidator,
-    //   },
-    // },
+    {
+      plugin: collaborationsPlugin,
+      options: {
+        collaborationsService,
+        playlistsService,
+        usersService,
+        validator: CollaborationsValidator,
+      },
+    },
   ]);
 
   server.ext('onPreResponse', (request, h) => {
-    //
     const { response } = request;
 
     if (response instanceof ClientError) {
-      //
       const newResponse = h.response({
         status: 'fail',
         message: response.message,
@@ -153,7 +136,6 @@ const init = async () => {
     }
 
     if (response.isBoom) {
-      //
       const newResponse = h.response({
         status: 'fail',
         message: response.message,
@@ -167,7 +149,6 @@ const init = async () => {
       !response.isBoom &&
       !(response instanceof ClientError)
     ) {
-      //
       console.error(response);
       const newResponse = h.response({
         status: 'error',
@@ -193,13 +174,11 @@ const init = async () => {
 };
 
 process.on('unhandledRejection', (err) => {
-  //
   console.error('Unhandled Rejection:', err);
   process.exit(1);
 });
 
 process.on('uncaughtException', (err) => {
-  //
   console.error('Uncaught Exception:', err);
   process.exit(1);
 });

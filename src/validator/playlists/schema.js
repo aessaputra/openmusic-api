@@ -8,7 +8,6 @@ const PostSongToPlaylistPayloadSchema = Joi.object({
   songId: Joi.string().required(),
 });
 
-// Untuk DELETE /playlists/{id}/songs, payloadnya juga songId
 const DeleteSongFromPlaylistPayloadSchema = Joi.object({
   songId: Joi.string().required(),
 });

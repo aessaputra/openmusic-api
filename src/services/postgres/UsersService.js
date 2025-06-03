@@ -1,8 +1,9 @@
 const { nanoid } = require('nanoid');
 const { Pool } = require('pg');
 const bcrypt = require('bcrypt');
-const InvariantError = require('../../exceptions/InvariantError'); //
-const AuthenticationError = require('../../exceptions/AuthenticationError'); //
+const InvariantError = require('../../exceptions/InvariantError');
+const AuthenticationError = require('../../exceptions/AuthenticationError');
+const NotFoundError = require('../../exceptions/NotFoundError');
 
 class UsersService {
   constructor(pool) {
@@ -13,10 +14,10 @@ class UsersService {
     await this.verifyNewUsername(username);
 
     const id = `user-${nanoid(16)}`;
-    const hashedPassword = await bcrypt.hash(password, 10); // Salt rounds = 10
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     const query = {
-      text: 'INSERT INTO users (id, username, password, fullname) VALUES($1, $2, $3, $4) RETURNING id', //
+      text: 'INSERT INTO users (id, username, password, fullname) VALUES($1, $2, $3, $4) RETURNING id',
       values: [id, username, hashedPassword, fullname],
     };
 
@@ -30,7 +31,7 @@ class UsersService {
 
   async verifyNewUsername(username) {
     const query = {
-      text: 'SELECT username FROM users WHERE username = $1', //
+      text: 'SELECT username FROM users WHERE username = $1',
       values: [username],
     };
 
@@ -45,7 +46,7 @@ class UsersService {
 
   async verifyUserCredential(username, password) {
     const query = {
-      text: 'SELECT id, password FROM users WHERE username = $1', //
+      text: 'SELECT id, password FROM users WHERE username = $1',
       values: [username],
     };
     const result = await this._pool.query(query);
@@ -63,18 +64,22 @@ class UsersService {
     return id;
   }
 
-  // Jika ada kebutuhan untuk mendapatkan user berdasarkan ID di masa mendatang (misal untuk playlists)
-  // async getUserById(userId) {
-  //   const query = {
-  //     text: 'SELECT id, username, fullname FROM users WHERE id = $1',
-  //     values: [userId],
-  //   };
-  //   const result = await this._pool.query(query);
-  //   if (!result.rows.length) {
-  //     throw new NotFoundError('User tidak ditemukan');
-  //   }
-  //   return result.rows[0];
-  // }
+  async getUserById(userId) {
+    const query = {
+      text: 'SELECT id, username, fullname FROM users WHERE id = $1',
+      values: [userId],
+    };
+    const result = await this._pool.query(query);
+
+    if (!result.rows.length) {
+      throw new NotFoundError('User tidak ditemukan');
+    }
+    return result.rows[0];
+  }
+
+  async verifyUserExistence(userId) {
+    await this.getUserById(userId);
+  }
 }
 
 module.exports = UsersService;

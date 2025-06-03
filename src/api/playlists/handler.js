@@ -1,14 +1,20 @@
 class PlaylistsHandler {
-  constructor(playlistsService, songsService, validator) {
+  constructor(
+    playlistsService,
+    songsService,
+    validator,
+    playlistActivitiesService = null
+  ) {
     this._playlistsService = playlistsService;
-    this._songsService = songsService; // Untuk validasi songId
+    this._songsService = songsService;
     this._validator = validator;
+    this._playlistActivitiesService = playlistActivitiesService;
   }
 
   async postPlaylistHandler(request, h) {
     this._validator.validatePlaylistPayload(request.payload);
     const { name } = request.payload;
-    const { id: credentialId } = request.auth.credentials; // Owner dari JWT
+    const { id: credentialId } = request.auth.credentials;
 
     const playlistId = await this._playlistsService.addPlaylist({
       name,
@@ -54,9 +60,7 @@ class PlaylistsHandler {
     const { id: playlistId } = request.params;
     const { id: credentialId } = request.auth.credentials;
 
-    // Verifikasi apakah songId valid (ada di database songs)
-    await this._songsService.getSongById(songId); // Ini akan throw NotFoundError jika lagu tidak ada
-
+    await this._songsService.getSongById(songId);
     await this._playlistsService.addSongToPlaylist(
       playlistId,
       songId,
@@ -75,9 +79,6 @@ class PlaylistsHandler {
     const { id: playlistId } = request.params;
     const { id: credentialId } = request.auth.credentials;
 
-    // Verifikasi akses (owner atau kolaborator)
-    // PlaylistsService.getPlaylistById akan melakukan ini jika dimodifikasi
-    // atau kita panggil verifyPlaylistAccess secara eksplisit
     await this._playlistsService.verifyPlaylistAccess(playlistId, credentialId);
     const playlist = await this._playlistsService.getPlaylistById(playlistId);
 
@@ -95,7 +96,6 @@ class PlaylistsHandler {
     const { id: playlistId } = request.params;
     const { id: credentialId } = request.auth.credentials;
 
-    // Tidak perlu cek songId di sini karena jika tidak ada di playlist, service akan menangani
     await this._playlistsService.deleteSongFromPlaylist(
       playlistId,
       songId,
@@ -105,6 +105,30 @@ class PlaylistsHandler {
     return {
       status: 'success',
       message: 'Lagu berhasil dihapus dari playlist',
+    };
+  }
+
+  async getPlaylistActivitiesHandler(request, h) {
+    const { id: playlistId } = request.params;
+    const { id: credentialId } = request.auth.credentials;
+
+    await this._playlistsService.verifyPlaylistAccess(playlistId, credentialId);
+
+    if (!this._playlistActivitiesService) {
+      throw new Error('PlaylistActivitiesService tidak tersedia');
+    }
+
+    const activities =
+      await this._playlistActivitiesService.getActivitiesByPlaylistId(
+        playlistId
+      );
+
+    return {
+      status: 'success',
+      data: {
+        playlistId,
+        activities,
+      },
     };
   }
 }

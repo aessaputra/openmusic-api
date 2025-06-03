@@ -4,7 +4,7 @@ const routes = (handler) => [
     path: '/playlists',
     handler: (request, h) => handler.postPlaylistHandler(request, h),
     options: {
-      auth: 'openmusic_jwt', // Membutuhkan autentikasi
+      auth: 'openmusic_jwt',
     },
   },
   {
@@ -12,7 +12,7 @@ const routes = (handler) => [
     path: '/playlists',
     handler: (request, h) => handler.getPlaylistsHandler(request, h),
     options: {
-      auth: 'openmusic_jwt', // Membutuhkan autentikasi
+      auth: 'openmusic_jwt',
     },
   },
   {
@@ -20,7 +20,7 @@ const routes = (handler) => [
     path: '/playlists/{id}',
     handler: (request, h) => handler.deletePlaylistByIdHandler(request, h),
     options: {
-      auth: 'openmusic_jwt', // Membutuhkan autentikasi
+      auth: 'openmusic_jwt',
     },
   },
   {
@@ -28,7 +28,7 @@ const routes = (handler) => [
     path: '/playlists/{id}/songs',
     handler: (request, h) => handler.postSongToPlaylistHandler(request, h),
     options: {
-      auth: 'openmusic_jwt', // Membutuhkan autentikasi
+      auth: 'openmusic_jwt',
     },
   },
   {
@@ -36,7 +36,7 @@ const routes = (handler) => [
     path: '/playlists/{id}/songs',
     handler: (request, h) => handler.getSongsFromPlaylistHandler(request, h),
     options: {
-      auth: 'openmusic_jwt', // Membutuhkan autentikasi
+      auth: 'openmusic_jwt',
     },
   },
   {
@@ -44,7 +44,15 @@ const routes = (handler) => [
     path: '/playlists/{id}/songs',
     handler: (request, h) => handler.deleteSongFromPlaylistHandler(request, h),
     options: {
-      auth: 'openmusic_jwt', // Membutuhkan autentikasi
+      auth: 'openmusic_jwt',
+    },
+  },
+  {
+    method: 'GET',
+    path: '/playlists/{id}/activities',
+    handler: (request, h) => handler.getPlaylistActivitiesHandler(request, h),
+    options: {
+      auth: 'openmusic_jwt',
     },
   },
 ];

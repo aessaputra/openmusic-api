@@ -1,15 +1,14 @@
 const { Pool } = require('pg');
-const InvariantError = require('../../exceptions/InvariantError'); //
+const InvariantError = require('../../exceptions/InvariantError');
 
 class AuthenticationsService {
   constructor(pool) {
-    // Modifikasi: Tambahkan pool jika belum ada di constructor Anda
-    this._pool = pool; // Gunakan pool yang di-inject dari server.js
+    this._pool = pool;
   }
 
   async addRefreshToken(token) {
     const query = {
-      text: 'INSERT INTO authentications VALUES($1)', //
+      text: 'INSERT INTO authentications VALUES($1)',
       values: [token],
     };
     await this._pool.query(query);
@@ -17,7 +16,7 @@ class AuthenticationsService {
 
   async verifyRefreshToken(token) {
     const query = {
-      text: 'SELECT token FROM authentications WHERE token = $1', //
+      text: 'SELECT token FROM authentications WHERE token = $1',
       values: [token],
     };
     const result = await this._pool.query(query);
@@ -29,7 +28,7 @@ class AuthenticationsService {
 
   async deleteRefreshToken(token) {
     const query = {
-      text: 'DELETE FROM authentications WHERE token = $1', //
+      text: 'DELETE FROM authentications WHERE token = $1',
       values: [token],
     };
     await this._pool.query(query);
