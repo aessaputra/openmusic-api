@@ -49,28 +49,25 @@ const init = async () => {
   server.ext('onPreResponse', (request, h) => {
     const { response } = request;
 
+    if (response instanceof ClientError) {
+      const newResponse = h.response({
+        status: 'fail',
+        message: response.message,
+      });
+      newResponse.code(response.statusCode);
+      return newResponse;
+    }
+
+    if (response.isBoom) {
+      const newResponse = h.response({
+        status: 'fail',
+        message: response.message,
+      });
+      newResponse.code(response.output.statusCode);
+      return newResponse;
+    }
+
     if (response instanceof Error) {
-      if (response instanceof ClientError) {
-        const newResponse = h.response({
-          status: 'fail',
-          message: response.message,
-        });
-        newResponse.code(response.statusCode);
-        return newResponse;
-      }
-
-      if (!response.isServer) {
-        if (response.isBoom && response.output.statusCode === 404) {
-          const newResponse = h.response({
-            status: 'fail',
-            message: 'Resource tidak ditemukan',
-          });
-          newResponse.code(404);
-          return newResponse;
-        }
-        return h.continue;
-      }
-
       console.error(response);
       const newResponse = h.response({
         status: 'error',
@@ -79,6 +76,7 @@ const init = async () => {
       newResponse.code(500);
       return newResponse;
     }
+
     return h.continue;
   });
 
