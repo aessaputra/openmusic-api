@@ -1,4 +1,3 @@
-// src/services/postgres/AlbumsService.js
 const { nanoid } = require('nanoid');
 const { Pool } = require('pg');
 const InvariantError = require('../../exceptions/InvariantError');
@@ -11,7 +10,6 @@ class AlbumsService {
 
   async addAlbum({ name, year }) {
     const id = `album-${nanoid(16)}`;
-    // Menggunakan DEFAULT CURRENT_TIMESTAMP dari DB untuk created_at dan updated_at
     const query = {
       text: 'INSERT INTO albums(id, name, year) VALUES($1, $2, $3) RETURNING id',
       values: [id, name, year],
@@ -26,11 +24,8 @@ class AlbumsService {
   }
 
   async getAlbumById(id) {
-    // Query pertama: mendapatkan detail album
     const albumQuery = {
       text: 'SELECT id, name, year FROM albums WHERE id = $1',
-      // Jika Anda ingin menampilkan created_at dan updated_at album juga, tambahkan di sini
-      // text: 'SELECT id, name, year, created_at, updated_at FROM albums WHERE id = $1',
       values: [id],
     };
     const albumResult = await this._pool.query(albumQuery);
@@ -41,27 +36,18 @@ class AlbumsService {
 
     const album = albumResult.rows[0];
 
-    // Query kedua: mendapatkan lagu-lagu yang ada di album tersebut
-    // Hanya kolom id, title, dan performer yang dibutuhkan untuk lagu
     const songsQuery = {
       text: 'SELECT id, title, performer FROM songs WHERE album_id = $1',
       values: [id],
     };
     const songsResult = await this._pool.query(songsQuery);
 
-    // Gabungkan hasil album dengan lagu-lagunya
-    // album.songs = songsResult.rows.map(song => ({ // Jika ada mapping lebih lanjut
-    //   id: song.id,
-    //   title: song.title,
-    //   performer: song.performer,
-    // }));
-    album.songs = songsResult.rows; // Langsung assign array lagu
+    album.songs = songsResult.rows;
 
     return album;
   }
 
   async editAlbumById(id, { name, year }) {
-    // Menggunakan trigger DB untuk updated_at
     const query = {
       text: 'UPDATE albums SET name = $1, year = $2 WHERE id = $3 RETURNING id',
       values: [name, year, id],

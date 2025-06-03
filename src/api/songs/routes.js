@@ -1,5 +1,4 @@
-// src/api/songs/routes.js
-const { SongPayloadSchema } = require('../../validator/songs/schema'); // Impor skema Joi untuk lagu
+const { SongPayloadSchema } = require('../../validator/songs/schema');
 
 const routes = (handler) => [
   {
@@ -8,33 +7,33 @@ const routes = (handler) => [
     handler: (request, h) => handler.postSongHandler(request, h),
     options: {
       validate: {
-        payload: SongPayloadSchema, // Validasi payload menggunakan Joi
+        payload: SongPayloadSchema,
       },
     },
   },
   {
     method: 'GET',
-    path: '/songs', // Mendapatkan semua lagu (atau yang difilter nanti)
+    path: '/songs',
     handler: (request, h) => handler.getSongsHandler(request, h),
   },
   {
     method: 'GET',
-    path: '/songs/{id}', // Mendapatkan lagu berdasarkan ID
+    path: '/songs/{id}',
     handler: (request, h) => handler.getSongByIdHandler(request, h),
   },
   {
     method: 'PUT',
-    path: '/songs/{id}', // Mengubah lagu berdasarkan ID
+    path: '/songs/{id}',
     handler: (request, h) => handler.putSongByIdHandler(request, h),
     options: {
       validate: {
-        payload: SongPayloadSchema, // Validasi payload menggunakan Joi
+        payload: SongPayloadSchema,
       },
     },
   },
   {
     method: 'DELETE',
-    path: '/songs/{id}', // Menghapus lagu berdasarkan ID
+    path: '/songs/{id}',
     handler: (request, h) => handler.deleteSongByIdHandler(request, h),
   },
 ];

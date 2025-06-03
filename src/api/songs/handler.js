@@ -1,11 +1,7 @@
-// src/api/songs/handler.js
-// const autoBind = require('auto-bind');
-
 class SongsHandler {
   constructor(service, validator) {
     this._service = service;
     this._validator = validator;
-    // autoBind(this);
   }
 
   async postSongHandler(request, h) {
@@ -23,10 +19,8 @@ class SongsHandler {
   }
 
   async getSongsHandler(request, h) {
-    // Mengambil query parameters 'title' dan 'performer' dari request
     const { title, performer } = request.query;
 
-    // Meneruskan query parameters ke service
     const songs = await this._service.getSongs({ title, performer });
     return {
       status: 'success',
@@ -57,7 +51,6 @@ class SongsHandler {
   async putSongByIdHandler(request, h) {
     const { id } = request.params;
     const { title, year, performer, genre, duration, albumId } = request.payload;
-    // Gunakan payload yang diterima langsung untuk service
     await this._service.editSongById(id, { title, year, performer, genre, duration, albumId });
 
     return {

@@ -1,4 +1,3 @@
-// src/validator/songs/index.js
 const InvariantError = require('../../exceptions/InvariantError');
 const { SongPayloadSchema } = require('./schema');
 

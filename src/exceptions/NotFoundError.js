@@ -1,4 +1,3 @@
-// src/exceptions/NotFoundError.js
 const ClientError = require('./ClientError');
 
 class NotFoundError extends ClientError {

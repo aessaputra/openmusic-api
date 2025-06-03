@@ -1,28 +1,23 @@
-// src/server.js
 require('dotenv').config();
 
 const Hapi = require('@hapi/hapi');
 const { Pool } = require('pg');
 
-// Impor error kustom
 const ClientError = require('./exceptions/ClientError');
 
-// --- Komponen Album ---
-const albumsPlugin = require('./api/albums'); // Plugin Album
+const albumsPlugin = require('./api/albums');
 const AlbumsService = require('./services/postgres/AlbumsService');
 const AlbumsValidator = require('./validator/albums');
 
-// --- Komponen Lagu (Songs) ---
-const songsPlugin = require('./api/songs'); // Plugin Lagu
+const songsPlugin = require('./api/songs');
 const SongsService = require('./services/postgres/SongsService');
 const SongsValidator = require('./validator/songs');
 
 const init = async () => {
   const pool = new Pool();
 
-  // Inisialisasi service
   const albumsService = new AlbumsService(pool);
-  const songsService = new SongsService(pool); // Inisialisasi SongsService
+  const songsService = new SongsService(pool);
 
   const server = Hapi.server({
     port: process.env.PORT || 5000,
@@ -34,7 +29,6 @@ const init = async () => {
     },
   });
 
-  // Registrasi plugin (sekarang ada dua plugin)
   await server.register([
     {
       plugin: albumsPlugin,
@@ -43,16 +37,15 @@ const init = async () => {
         validator: AlbumsValidator,
       },
     },
-    { // Tambahkan plugin lagu
+    {
       plugin: songsPlugin,
       options: {
-        service: songsService, // Kirim instance SongsService
-        validator: SongsValidator, // Kirim SongsValidator
+        service: songsService,
+        validator: SongsValidator,
       },
     },
   ]);
 
-  // Implementasi onPreResponse (tetap sama)
   server.ext('onPreResponse', (request, h) => {
     const { response } = request;
 

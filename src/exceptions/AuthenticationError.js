@@ -1,4 +1,3 @@
-// src/exceptions/AuthenticationError.js
 const ClientError = require('./ClientError');
 
 class AuthenticationError extends ClientError {

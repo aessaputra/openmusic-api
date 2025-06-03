@@ -1,4 +1,3 @@
-// src/validator/albums/schema.js
 const Joi = require('joi');
 
 const currentYear = new Date().getFullYear();

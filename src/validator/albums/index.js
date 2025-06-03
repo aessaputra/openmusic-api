@@ -1,4 +1,3 @@
-// src/validator/albums/index.js
 const InvariantError = require('../../exceptions/InvariantError');
 const { AlbumPayloadSchema } = require('./schema');
 

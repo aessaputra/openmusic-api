@@ -3,23 +3,21 @@
 exports.shorthands = undefined;
 
 exports.up = (pgm) => {
-  // Membuat tabel 'albums'
   pgm.createTable('albums', {
     id: {
-      type: 'VARCHAR(50)', // Sesuai dengan nanoid, bisa juga CHAR(21) jika panjang tetap
+      type: 'VARCHAR(50)',
       primaryKey: true,
     },
     name: {
-      type: 'TEXT', // Menggunakan TEXT untuk fleksibilitas, bisa juga VARCHAR(255)
+      type: 'TEXT',
       notNull: true,
     },
     year: {
       type: 'INTEGER',
       notNull: true,
     },
-    // Anda bisa menambahkan kolom created_at dan updated_at jika diperlukan
     created_at: {
-      type: 'TEXT', // Atau TIMESTAMP
+      type: 'TEXT',
       notNull: true,
       default: pgm.func('current_timestamp'),
     },
@@ -30,7 +28,6 @@ exports.up = (pgm) => {
     },
   });
 
-  // Membuat tabel 'songs'
   pgm.createTable('songs', {
     id: {
       type: 'VARCHAR(50)',
@@ -54,14 +51,13 @@ exports.up = (pgm) => {
     },
     duration: {
       type: 'INTEGER',
-      notNull: false, // Opsional, jadi bisa NULL
+      notNull: false,
     },
-    album_id: { // Menggunakan snake_case untuk konsistensi kolom database
+    album_id: {
       type: 'VARCHAR(50)',
-      notNull: false, // Opsional, jadi bisa NULL
-      references: '"albums"(id)', // Referensi ke tabel albums kolom id
-      onDelete: 'SET NULL', // Jika album dihapus, album_id di lagu menjadi NULL
-      // Opsi lain: 'CASCADE' (jika lagu harus ikut terhapus), 'RESTRICT' (mencegah penghapusan album jika ada lagu terkait)
+      notNull: false,
+      references: '"albums"(id)',
+      onDelete: 'SET NULL',
     },
     created_at: {
       type: 'TEXT',
@@ -75,13 +71,10 @@ exports.up = (pgm) => {
     },
   });
 
-  // Membuat indeks pada songs.album_id untuk performa query yang lebih baik (opsional tapi direkomendasikan)
   pgm.createIndex('songs', 'album_id');
 };
 
 exports.down = (pgm) => {
-  // Menghapus tabel 'songs' terlebih dahulu karena ada foreign key ke 'albums'
   pgm.dropTable('songs');
-  // Menghapus tabel 'albums'
   pgm.dropTable('albums');
 };

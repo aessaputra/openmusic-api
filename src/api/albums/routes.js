@@ -1,14 +1,13 @@
-// src/api/albums/routes.js
-const { AlbumPayloadSchema } = require('../../validator/albums/schema'); // Impor skema Joi
+const { AlbumPayloadSchema } = require('../../validator/albums/schema');
 
 const routes = (handler) => [
   {
     method: 'POST',
     path: '/albums',
-    handler: (request, h) => handler.postAlbumHandler(request, h), // Menggunakan arrow function
+    handler: (request, h) => handler.postAlbumHandler(request, h),
     options: {
       validate: {
-        payload: AlbumPayloadSchema, // Validasi payload menggunakan Joi
+        payload: AlbumPayloadSchema,
       },
     },
   },
@@ -23,7 +22,7 @@ const routes = (handler) => [
     handler: (request, h) => handler.putAlbumByIdHandler(request, h),
     options: {
       validate: {
-        payload: AlbumPayloadSchema, // Validasi payload menggunakan Joi
+        payload: AlbumPayloadSchema,
       },
     },
   },
