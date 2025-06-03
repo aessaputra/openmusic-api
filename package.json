@@ -5,7 +5,12 @@
   "main": "index.js",
   "scripts": {
     "start": "node src/server.js",
-    "lint": "eslint ./src"
+    "lint": "eslint ./src",
+    "migrate": "node-pg-migrate",
+    "migrate:create": "node-pg-migrate --migrations-dir migrations create",
+    "migrate:up": "node-pg-migrate up --migrations-dir migrations",
+    "migrate:down": "node-pg-migrate down --migrations-dir migrations",
+    "dev": "nodemon src/server.js"
   },
   "keywords": [],
   "author": "",
@@ -14,11 +19,15 @@
   "dependencies": {
     "@hapi/hapi": "^21.4.0",
     "dotenv": "^16.5.0",
-    "nanoid": "^5.1.5"
+    "joi": "^17.13.3",
+    "nanoid": "^5.1.5",
+    "node-pg-migrate": "^8.0.1",
+    "pg": "^8.16.0"
   },
   "devDependencies": {
     "eslint": "^9.28.0",
     "eslint-config-airbnb-base": "^15.0.0",
-    "eslint-plugin-import": "^2.31.0"
+    "eslint-plugin-import": "^2.31.0",
+    "nodemon": "^3.1.10"
   }
 }
