@@ -5,7 +5,6 @@ exports.up = (pgm) => {
     token: {
       type: 'TEXT',
       notNull: true,
-      unique: true,
     },
   });
 };
