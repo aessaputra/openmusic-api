@@ -1,4 +1,3 @@
-// src/validator/exports/schema.js
 const Joi = require('joi');
 
 const ExportPlaylistsPayloadSchema = Joi.object({

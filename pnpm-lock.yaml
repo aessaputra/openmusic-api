@@ -11,6 +11,9 @@ importers:
       '@hapi/hapi':
         specifier: ^21.4.0
         version: 21.4.0
+      '@hapi/inert':
+        specifier: ^7.1.0
+        version: 7.1.0
       '@hapi/jwt':
         specifier: ^3.2.0
         version: 3.2.0
@@ -35,6 +38,9 @@ importers:
       pg:
         specifier: ^8.16.0
         version: 8.16.0
+      redis:
+        specifier: ^5.5.5
+        version: 5.5.5
     devDependencies:
       eslint:
         specifier: ^8.2.0
@@ -125,6 +131,9 @@ packages:
   '@hapi/hoek@9.3.0':
     resolution: {integrity: sha512-/c6rf4UJlmHlC9b5BaNvzAcFv7HZ2QHaV0D4/HNlBdvFnvQq8RI4kYdhyPCl7Xj+oWvTWQ8ujhqS53LIgAe6KQ==}
 
+  '@hapi/inert@7.1.0':
+    resolution: {integrity: sha512-5X+cl/Ozm0U9uPGGX1dSKhnhTQIf161bH/kkTN9OBVAZKFG+nrj8j/NMj6S1zBBZWmQrkVRNPfCUGrXzB4fCFQ==}
+
   '@hapi/iron@7.0.1':
     resolution: {integrity: sha512-tEZnrOujKpS6jLKliyWBl3A9PaE+ppuL/+gkbyPPDb/l2KSKQyH4lhMkVb+sBhwN+qaxxlig01JRqB8dk/mPxQ==}
 
@@ -203,6 +212,34 @@ packages:
   '@nodelib/fs.walk@1.2.8':
     resolution: {integrity: sha512-oGB+UxlgWcgQkgwo8GcEGwemoTFt3FIO9ababBmaGwXIoBKZ+GTy0pP185beGg7Llih/NSHSV2XAs1lnznocSg==}
     engines: {node: '>= 8'}
+
+  '@redis/bloom@5.5.5':
+    resolution: {integrity: sha512-M0GDmw8k0EOFoSpmMjhFUADk/apoano97fLSpT81opgmkkDtBB9iB6l6husxnzK5t2qNz/o0+OCVG9g6lEEwKw==}
+    engines: {node: '>= 18'}
+    peerDependencies:
+      '@redis/client': ^5.5.5
+
+  '@redis/client@5.5.5':
+    resolution: {integrity: sha512-1Dv/CVdMNLw0mlROSnmpp4MQu+6YIJX0YR0h3g2hnPdLvk6L7TcRcrUj7BQFGSeZD2MxklAUO+rp09ITUqE5Og==}
+    engines: {node: '>= 18'}
+
+  '@redis/json@5.5.5':
+    resolution: {integrity: sha512-Nq8wHjOhwuhD05YPWFPL9RyT3K1VdT37TKvqbhykZA2MWQgjjhLn5i1/6zZ+1b0Zc/Sr9E0eK9J8txk6YJR6EA==}
+    engines: {node: '>= 18'}
+    peerDependencies:
+      '@redis/client': ^5.5.5
+
+  '@redis/search@5.5.5':
+    resolution: {integrity: sha512-xM/DKrRhbsMS2QQF5bBPjR7P/QEjWWZDUr92r+UOwkZjvc/kmy0tp7h8zkxBo2jtSF99vkk2mwMzn6fQ8d60aQ==}
+    engines: {node: '>= 18'}
+    peerDependencies:
+      '@redis/client': ^5.5.5
+
+  '@redis/time-series@5.5.5':
+    resolution: {integrity: sha512-2ifwV75Fv/uVX4n0zqvgqIlIInHZtVj+afjcbXPBD2GhG2AeVfkitTz1bMnGnNDA78sWRYooK42OWH9yqujjyQ==}
+    engines: {node: '>= 18'}
+    peerDependencies:
+      '@redis/client': ^5.5.5
 
   '@rtsao/scc@1.1.0':
     resolution: {integrity: sha512-zt6OdqaDoOnJ1ZYsCYGt9YmWzDXl4vQdKTyJev62gFhRGKdx7mcT54V9KIjg+d2wi9EXsPvAPKe7i7WjfVWB8g==}
@@ -345,6 +382,10 @@ packages:
   cliui@8.0.1:
     resolution: {integrity: sha512-BSeNnyus75C4//NQ9gQt1/csTXyo/8Sb+afLAkzAptFuMsod9HFokGNudZpi/oQV73hnVK+sR+5PVRMd+Dr7YQ==}
     engines: {node: '>=12'}
+
+  cluster-key-slot@1.1.2:
+    resolution: {integrity: sha512-RMr0FhtfXemyinomL4hrWcYJxmX6deFdCxpJzhDttxgO1+bcCnkk+9drydLVDmAMG7NE6aN/fl4F7ucU/90gAA==}
+    engines: {node: '>=0.10.0'}
 
   color-convert@2.0.1:
     resolution: {integrity: sha512-RRECPsj7iu/xb5oKYcsFHSppFNnsj/52OVTRKb4zP5onXwVF3zVmmToNcOfGC+CRDpfK/U584fMg38ZHCaElKQ==}
@@ -864,6 +905,10 @@ packages:
     resolution: {integrity: sha512-QIXZUBJUx+2zHUdQujWejBkcD9+cs94tLn0+YL8UrCh+D5sCXZ4c7LaEH48pNwRY3MLDgqUFyhlCyjJPf1WP0A==}
     engines: {node: 20 || >=22}
 
+  lru-cache@7.18.3:
+    resolution: {integrity: sha512-jumlc0BIUrS3qJGgIkWZsyfAM7NCWiBcCDhnd+3NNM5KbBmLTgHVfWBcg6W+rLUsIpzpERPsvwUP7CckAQSOoA==}
+    engines: {node: '>=12'}
+
   math-intrinsics@1.1.0:
     resolution: {integrity: sha512-/IXtbwEk5HTPyEwyKX6hGkYXxM9nbj64B+ilVJnC/R6B0pH5G4V3b0pVbL7DBj4tkhBAppbQUlf6F6Xl9LHu1g==}
     engines: {node: '>= 0.4'}
@@ -1076,6 +1121,10 @@ packages:
   readdirp@3.6.0:
     resolution: {integrity: sha512-hOS089on8RduqdbhvQ5Z37A0ESjsqz6qnRcffsMU3495FuTdqSm+7bhJ29JvIOsBDEEnan5DPu9t3To9VRlMzA==}
     engines: {node: '>=8.10.0'}
+
+  redis@5.5.5:
+    resolution: {integrity: sha512-x7vpciikEY7nptGzQrE5I+/pvwFZJDadPk/uEoyGSg/pZ2m/CX2n5EhSgUh+S5T7Gz3uKM6YzWcXEu3ioAsdFQ==}
+    engines: {node: '>= 18'}
 
   reflect.getprototypeof@1.0.10:
     resolution: {integrity: sha512-00o4I+DVrefhv+nX0ulyi3biSHCPDe+yLv5o/p6d/UVlirijB8E16FtfwSAi4g3tcqrQ4lRAqQSoFEZJehYEcw==}
@@ -1458,6 +1507,15 @@ snapshots:
 
   '@hapi/hoek@9.3.0': {}
 
+  '@hapi/inert@7.1.0':
+    dependencies:
+      '@hapi/ammo': 6.0.1
+      '@hapi/boom': 10.0.1
+      '@hapi/bounce': 3.0.2
+      '@hapi/hoek': 11.0.7
+      '@hapi/validate': 2.0.1
+      lru-cache: 7.18.3
+
   '@hapi/iron@7.0.1':
     dependencies:
       '@hapi/b64': 6.0.1
@@ -1590,6 +1648,26 @@ snapshots:
     dependencies:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.19.1
+
+  '@redis/bloom@5.5.5(@redis/client@5.5.5)':
+    dependencies:
+      '@redis/client': 5.5.5
+
+  '@redis/client@5.5.5':
+    dependencies:
+      cluster-key-slot: 1.1.2
+
+  '@redis/json@5.5.5(@redis/client@5.5.5)':
+    dependencies:
+      '@redis/client': 5.5.5
+
+  '@redis/search@5.5.5(@redis/client@5.5.5)':
+    dependencies:
+      '@redis/client': 5.5.5
+
+  '@redis/time-series@5.5.5(@redis/client@5.5.5)':
+    dependencies:
+      '@redis/client': 5.5.5
 
   '@rtsao/scc@1.1.0': {}
 
@@ -1761,6 +1839,8 @@ snapshots:
       string-width: 4.2.3
       strip-ansi: 6.0.1
       wrap-ansi: 7.0.0
+
+  cluster-key-slot@1.1.2: {}
 
   color-convert@2.0.1:
     dependencies:
@@ -2386,6 +2466,8 @@ snapshots:
 
   lru-cache@11.1.0: {}
 
+  lru-cache@7.18.3: {}
+
   math-intrinsics@1.1.0: {}
 
   mime-db@1.54.0: {}
@@ -2581,6 +2663,14 @@ snapshots:
   readdirp@3.6.0:
     dependencies:
       picomatch: 2.3.1
+
+  redis@5.5.5:
+    dependencies:
+      '@redis/bloom': 5.5.5(@redis/client@5.5.5)
+      '@redis/client': 5.5.5
+      '@redis/json': 5.5.5(@redis/client@5.5.5)
+      '@redis/search': 5.5.5(@redis/client@5.5.5)
+      '@redis/time-series': 5.5.5(@redis/client@5.5.5)
 
   reflect.getprototypeof@1.0.10:
     dependencies:

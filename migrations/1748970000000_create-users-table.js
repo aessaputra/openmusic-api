@@ -3,7 +3,6 @@
 exports.shorthands = undefined;
 
 exports.up = (pgm) => {
-  // Membuat tabel users
   pgm.createTable('users', {
     id: {
       type: 'VARCHAR(50)',

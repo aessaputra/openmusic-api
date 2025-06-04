@@ -1,14 +1,20 @@
 require('dotenv').config();
 
 const Hapi = require('@hapi/hapi');
-const { Pool } = require('pg');
 const Jwt = require('@hapi/jwt');
+const Inert = require('@hapi/inert');
+const path = require('path');
+const { Pool } = require('pg');
+
+const config = require('./utils/config');
 
 const ClientError = require('./exceptions/ClientError');
 
 const albumsPlugin = require('./api/albums');
 const AlbumsService = require('./services/postgres/AlbumsService');
 const AlbumsValidator = require('./validator/albums');
+const StorageService = require('./services/storage/StorageService');
+const CacheService = require('./services/redis/CacheService');
 
 const songsPlugin = require('./api/songs');
 const SongsService = require('./services/postgres/SongsService');
@@ -26,15 +32,23 @@ const TokenManager = require('./tokenize/TokenManager');
 const playlistsPlugin = require('./api/playlists');
 const PlaylistsService = require('./services/postgres/PlaylistsService');
 const PlaylistsValidator = require('./validator/playlists');
+const PlaylistActivitiesService = require('./services/postgres/PlaylistActivitiesService');
 
 const collaborationsPlugin = require('./api/collaborations');
 const CollaborationsService = require('./services/postgres/CollaborationsService');
 const CollaborationsValidator = require('./validator/collaborations');
 
-const PlaylistActivitiesService = require('./services/postgres/PlaylistActivitiesService');
+const exportsPlugin = require('./api/exports');
+const ProducerService = require('./services/rabbitmq/ProducerService');
+const ExportsValidator = require('./validator/exports');
 
 const init = async () => {
   const pool = new Pool();
+
+  const cacheService = new CacheService();
+  const storageService = new StorageService(
+    path.resolve(__dirname, config.app.uploadsPath)
+  );
 
   const albumsService = new AlbumsService(pool);
   const songsService = new SongsService(pool);
@@ -42,7 +56,6 @@ const init = async () => {
   const authenticationsService = new AuthenticationsService(pool);
   const collaborationsService = new CollaborationsService(pool);
   const playlistActivitiesService = new PlaylistActivitiesService(pool);
-
   const playlistsService = new PlaylistsService(
     pool,
     collaborationsService,
@@ -50,8 +63,8 @@ const init = async () => {
   );
 
   const server = Hapi.server({
-    port: process.env.PORT || 5000,
-    host: process.env.HOST || 'localhost',
+    port: config.app.port,
+    host: config.app.host,
     routes: {
       cors: {
         origin: ['*'],
@@ -59,11 +72,7 @@ const init = async () => {
     },
   });
 
-  await server.register([
-    {
-      plugin: Jwt,
-    },
-  ]);
+  await server.register([{ plugin: Jwt }, { plugin: Inert }]);
 
   server.auth.strategy('openmusic_jwt', 'jwt', {
     keys: process.env.ACCESS_TOKEN_KEY,
@@ -84,7 +93,12 @@ const init = async () => {
   await server.register([
     {
       plugin: albumsPlugin,
-      options: { service: albumsService, validator: AlbumsValidator },
+      options: {
+        service: albumsService,
+        storageService,
+        cacheService,
+        validator: AlbumsValidator,
+      },
     },
     {
       plugin: songsPlugin,
@@ -121,11 +135,28 @@ const init = async () => {
         validator: CollaborationsValidator,
       },
     },
+    {
+      plugin: exportsPlugin,
+      options: {
+        producerService: ProducerService,
+        playlistsService,
+        validator: ExportsValidator,
+      },
+    },
   ]);
+
+  server.route({
+    method: 'GET',
+    path: '/uploads/covers/{param*}',
+    handler: {
+      directory: {
+        path: path.resolve(__dirname, config.app.uploadsPath),
+      },
+    },
+  });
 
   server.ext('onPreResponse', (request, h) => {
     const { response } = request;
-
     if (response instanceof ClientError) {
       const newResponse = h.response({
         status: 'fail',
@@ -134,7 +165,6 @@ const init = async () => {
       newResponse.code(response.statusCode);
       return newResponse;
     }
-
     if (response.isBoom) {
       const newResponse = h.response({
         status: 'fail',
@@ -143,7 +173,6 @@ const init = async () => {
       newResponse.code(response.output.statusCode);
       return newResponse;
     }
-
     if (
       response instanceof Error &&
       !response.isBoom &&
@@ -157,7 +186,6 @@ const init = async () => {
       newResponse.code(500);
       return newResponse;
     }
-
     return h.continue;
   });
 
@@ -165,7 +193,7 @@ const init = async () => {
     method: 'GET',
     path: '/',
     handler: () => ({
-      message: 'Selamat datang di OpenMusic API v2!',
+      message: 'Selamat datang di OpenMusic API v3!',
     }),
   });
 

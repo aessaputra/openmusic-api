@@ -1,5 +1,4 @@
-// src/validator/exports/index.js
-const InvariantError = require('../../exceptions/InvariantError'); //
+const InvariantError = require('../../exceptions/InvariantError');
 const { ExportPlaylistsPayloadSchema } = require('./schema');
 
 const ExportsValidator = {
