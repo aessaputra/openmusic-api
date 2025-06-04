@@ -1,3 +1,4 @@
+// config.js (DIPERBARUI)
 require('dotenv').config();
 
 const config = {
@@ -7,7 +8,7 @@ const config = {
     uploadsPath: process.env.UPLOADS_PATH || 'src/public/uploads/covers',
   },
   rabbitMq: {
-    server: process.env.RBITMQ_SERVER,
+    server: process.env.RABBITMQ_SERVER,
   },
   smtp: {
     host: process.env.SMTP_HOST,
@@ -16,9 +17,7 @@ const config = {
     password: process.env.SMTP_PASSWORD,
   },
   redis: {
-    host: process.env.REDIS_SERVER.startsWith('redis://')
-      ? new URL(process.env.REDIS_SERVER).hostname
-      : process.env.REDIS_SERVER,
+    host: process.env.REDIS_SERVER,
   },
 };
 
