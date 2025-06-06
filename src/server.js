@@ -47,7 +47,7 @@ const init = async () => {
 
   const cacheService = new CacheService();
   const storageService = new StorageService(
-    path.resolve(__dirname, config.app.uploadsPath),
+    path.resolve(__dirname, config.app.uploadsPath)
   );
 
   const albumsService = new AlbumsService(pool);
@@ -59,7 +59,7 @@ const init = async () => {
   const playlistsService = new PlaylistsService(
     pool,
     collaborationsService,
-    playlistActivitiesService,
+    playlistActivitiesService
   );
 
   const server = Hapi.server({
@@ -102,7 +102,11 @@ const init = async () => {
     },
     {
       plugin: songsPlugin,
-      options: { service: songsService, validator: SongsValidator },
+      options: {
+        service: songsService,
+        validator: SongsValidator,
+        cacheService,
+      },
     },
     {
       plugin: usersPlugin,
@@ -174,9 +178,9 @@ const init = async () => {
       return newResponse;
     }
     if (
-      response instanceof Error
-      && !response.isBoom
-      && !(response instanceof ClientError)
+      response instanceof Error &&
+      !response.isBoom &&
+      !(response instanceof ClientError)
     ) {
       console.error(response);
       const newResponse = h.response({

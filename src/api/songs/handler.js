@@ -1,13 +1,13 @@
 class SongsHandler {
-  constructor(service, validator) {
+  constructor(service, validator, cacheService) {
     this._service = service;
     this._validator = validator;
+    this._cacheService = cacheService;
   }
 
   async postSongHandler(request, h) {
-    const {
-      title, year, performer, genre, duration, albumId,
-    } = request.payload;
+    const { title, year, performer, genre, duration, albumId } =
+      request.payload;
     const songId = await this._service.addSong({
       title,
       year,
@@ -16,6 +16,8 @@ class SongsHandler {
       duration,
       albumId,
     });
+
+    await this._cacheService.delete('songs:all');
 
     const response = h.response({
       status: 'success',
@@ -30,7 +32,36 @@ class SongsHandler {
   async getSongsHandler(request) {
     const { title, performer } = request.query;
 
-    const songs = await this._service.getSongs({ title, performer });
+    if (title || performer) {
+      const songs = await this._service.getSongs({ title, performer });
+      return {
+        status: 'success',
+        data: {
+          songs,
+        },
+      };
+    }
+
+    try {
+      const cachedSongs = await this._cacheService.get('songs:all');
+      if (cachedSongs) {
+        return {
+          status: 'success',
+          data: {
+            songs: JSON.parse(cachedSongs),
+          },
+        };
+      }
+    } catch (error) {
+      console.error(
+        '[CacheService] Gagal mengambil cache untuk songs:all:',
+        error
+      );
+    }
+
+    const songs = await this._service.getSongs({});
+    await this._cacheService.set('songs:all', JSON.stringify(songs));
+
     return {
       status: 'success',
       data: {
@@ -59,9 +90,8 @@ class SongsHandler {
 
   async putSongByIdHandler(request) {
     const { id } = request.params;
-    const {
-      title, year, performer, genre, duration, albumId,
-    } = request.payload;
+    const { title, year, performer, genre, duration, albumId } =
+      request.payload;
     await this._service.editSongById(id, {
       title,
       year,
@@ -70,6 +100,8 @@ class SongsHandler {
       duration,
       albumId,
     });
+
+    await this._cacheService.delete('songs:all');
 
     return {
       status: 'success',
@@ -80,6 +112,9 @@ class SongsHandler {
   async deleteSongByIdHandler(request) {
     const { id } = request.params;
     await this._service.deleteSongById(id);
+
+    await this._cacheService.delete('songs:all');
+
     return {
       status: 'success',
       message: 'Lagu berhasil dihapus',
