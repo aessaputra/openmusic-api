@@ -31,7 +31,7 @@ class CollaborationsService {
 
     if (!result.rows.length) {
       throw new InvariantError(
-        'Kolaborasi gagal dihapus. Id tidak ditemukan atau kombinasi playlist dan user tidak cocok.'
+        'Kolaborasi gagal dihapus. Id tidak ditemukan atau kombinasi playlist dan user tidak cocok.',
       );
     }
   }

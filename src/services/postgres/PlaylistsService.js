@@ -7,7 +7,7 @@ class PlaylistsService {
   constructor(
     pool,
     collaborationsService = null,
-    playlistActivitiesService = null
+    playlistActivitiesService = null,
   ) {
     this._pool = pool;
     this._collaborationsService = collaborationsService;
@@ -105,7 +105,7 @@ class PlaylistsService {
         playlistId,
         songId,
         userId,
-        'add'
+        'add',
       );
     }
   }
@@ -121,7 +121,7 @@ class PlaylistsService {
 
     if (!result.rows.length) {
       throw new InvariantError(
-        'Lagu gagal dihapus dari playlist. Mungkin lagu tidak ada di playlist ini.'
+        'Lagu gagal dihapus dari playlist. Mungkin lagu tidak ada di playlist ini.',
       );
     }
 
@@ -130,7 +130,7 @@ class PlaylistsService {
         playlistId,
         songId,
         userId,
-        'delete'
+        'delete',
       );
     }
   }
@@ -159,19 +159,18 @@ class PlaylistsService {
         throw error;
       }
       if (this._collaborationsService) {
-        const collaboration =
-          await this._collaborationsService.verifyCollaborator(
-            playlistId,
-            userId
-          );
+        const collaboration = await this._collaborationsService.verifyCollaborator(
+          playlistId,
+          userId,
+        );
         if (!collaboration) {
           throw new AuthorizationError(
-            'Anda tidak berhak mengakses resource ini'
+            'Anda tidak berhak mengakses resource ini',
           );
         }
       } else {
         throw new AuthorizationError(
-          'Anda tidak berhak mengakses resource ini'
+          'Anda tidak berhak mengakses resource ini',
         );
       }
     }

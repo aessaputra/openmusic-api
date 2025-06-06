@@ -73,7 +73,7 @@ class AlbumsService {
     const result = await this._pool.query(query);
     if (!result.rowCount) {
       throw new NotFoundError(
-        'Gagal memperbarui sampul. Album tidak ditemukan.'
+        'Gagal memperbarui sampul. Album tidak ditemukan.',
       );
     }
   }
@@ -129,7 +129,7 @@ class AlbumsService {
     const result = await this._pool.query(query);
     if (!result.rowCount) {
       throw new InvariantError(
-        'Gagal batal menyukai album. Like tidak ditemukan.'
+        'Gagal batal menyukai album. Like tidak ditemukan.',
       );
     }
   }

@@ -23,7 +23,7 @@ class ExportsHandler {
     try {
       await this._producerService.sendMessage(
         queueName,
-        JSON.stringify(message)
+        JSON.stringify(message),
       );
 
       const response = h.response({
@@ -35,7 +35,7 @@ class ExportsHandler {
     } catch (error) {
       console.error(
         `[ExportsHandler] Gagal mengirim pesan ke antrean ${queueName}:`,
-        error
+        error,
       );
       const response = h.response({
         status: 'success',

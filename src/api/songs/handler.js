@@ -5,8 +5,9 @@ class SongsHandler {
   }
 
   async postSongHandler(request, h) {
-    const { title, year, performer, genre, duration, albumId } =
-      request.payload;
+    const {
+      title, year, performer, genre, duration, albumId,
+    } = request.payload;
     const songId = await this._service.addSong({
       title,
       year,
@@ -58,8 +59,9 @@ class SongsHandler {
 
   async putSongByIdHandler(request) {
     const { id } = request.params;
-    const { title, year, performer, genre, duration, albumId } =
-      request.payload;
+    const {
+      title, year, performer, genre, duration, albumId,
+    } = request.payload;
     await this._service.editSongById(id, {
       title,
       year,

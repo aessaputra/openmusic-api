@@ -85,14 +85,14 @@ class AlbumsHandler {
     await this._albumsService.getAlbumById(albumId);
 
     const oldCoverFilename = await this._albumsService.getAlbumCoverFilename(
-      albumId
+      albumId,
     );
     if (oldCoverFilename) {
       try {
         await this._storageService.deleteFile(oldCoverFilename);
       } catch (error) {
         console.error(
-          `[AlbumsHandler] Gagal menghapus cover lama ${oldCoverFilename}: ${error.message}`
+          `[AlbumsHandler] Gagal menghapus cover lama ${oldCoverFilename}: ${error.message}`,
         );
       }
     }
@@ -120,7 +120,7 @@ class AlbumsHandler {
 
     const alreadyLiked = await this._albumsService.checkUserLikeExists(
       userId,
-      albumId
+      albumId,
     );
     if (alreadyLiked) {
       throw new InvariantError('Album sudah disukai');
@@ -172,7 +172,7 @@ class AlbumsHandler {
       }
     } catch (error) {
       console.warn(
-        `[AlbumsHandler] Gagal membaca cache untuk ${cacheKey}: ${error.message}. Melanjutkan ke DB.`
+        `[AlbumsHandler] Gagal membaca cache untuk ${cacheKey}: ${error.message}. Melanjutkan ke DB.`,
       );
     }
 

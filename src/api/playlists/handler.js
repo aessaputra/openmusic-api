@@ -3,7 +3,7 @@ class PlaylistsHandler {
     playlistsService,
     songsService,
     validator,
-    playlistActivitiesService = null
+    playlistActivitiesService = null,
   ) {
     this._playlistsService = playlistsService;
     this._songsService = songsService;
@@ -64,7 +64,7 @@ class PlaylistsHandler {
     await this._playlistsService.addSongToPlaylist(
       playlistId,
       songId,
-      credentialId
+      credentialId,
     );
 
     const response = h.response({
@@ -99,7 +99,7 @@ class PlaylistsHandler {
     await this._playlistsService.deleteSongFromPlaylist(
       playlistId,
       songId,
-      credentialId
+      credentialId,
     );
 
     return {
@@ -118,10 +118,9 @@ class PlaylistsHandler {
       throw new Error('PlaylistActivitiesService tidak tersedia');
     }
 
-    const activities =
-      await this._playlistActivitiesService.getActivitiesByPlaylistId(
-        playlistId
-      );
+    const activities = await this._playlistActivitiesService.getActivitiesByPlaylistId(
+      playlistId,
+    );
 
     return {
       status: 'success',
