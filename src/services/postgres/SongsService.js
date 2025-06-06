@@ -7,7 +7,9 @@ class SongsService {
     this._pool = pool;
   }
 
-  async addSong({ title, year, performer, genre, duration, albumId }) {
+  async addSong({
+    title, year, performer, genre, duration, albumId,
+  }) {
     const id = `song-${nanoid(16)}`;
     const query = {
       text: `INSERT INTO songs(id, title, year, performer, genre, duration, album_id)
@@ -67,7 +69,9 @@ class SongsService {
     return result.rows[0];
   }
 
-  async editSongById(id, { title, year, performer, genre, duration, albumId }) {
+  async editSongById(id, {
+    title, year, performer, genre, duration, albumId,
+  }) {
     const correctedEditQuery = {
       text: `UPDATE songs SET title = $1, year = $2, performer = $3, genre = $4, duration = $5, album_id = $6
              WHERE id = $7 RETURNING id`,

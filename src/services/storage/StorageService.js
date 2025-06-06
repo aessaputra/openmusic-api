@@ -29,7 +29,7 @@ class StorageService {
         if (error) {
           if (error.code === 'ENOENT') {
             console.warn(
-              `[StorageService] File ${filename} tidak ditemukan saat mencoba menghapus.`
+              `[StorageService] File ${filename} tidak ditemukan saat mencoba menghapus.`,
             );
             return resolve();
           }

@@ -1,5 +1,3 @@
-const InvariantError = require('../../exceptions/InvariantError');
-
 class ExportsHandler {
   constructor(producerService, playlistsService, validator) {
     this._producerService = producerService;

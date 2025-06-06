@@ -15,12 +15,10 @@ class CacheService {
 
     this._client
       .connect()
-      .catch((err) =>
-        console.error(
-          '[CacheService] Gagal konek ke Redis saat inisialisasi:',
-          err
-        )
-      );
+      .catch((err) => console.error(
+        '[CacheService] Gagal konek ke Redis saat inisialisasi:',
+        err,
+      ));
   }
 
   async set(key, value, expirationInSeconds = 1800) {
@@ -62,7 +60,7 @@ class CacheService {
     } catch (error) {
       console.error(
         `[CacheService] Gagal delete cache untuk key ${key}:`,
-        error
+        error,
       );
       return 0;
     }

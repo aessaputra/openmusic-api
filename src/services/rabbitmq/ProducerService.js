@@ -17,7 +17,7 @@ const ProducerService = {
       });
 
       console.log(
-        `[ProducerService] Pesan berhasil dikirim ke antrean ${queue}: ${message}`
+        `[ProducerService] Pesan berhasil dikirim ke antrean ${queue}: ${message}`,
       );
 
       setTimeout(() => {
@@ -27,7 +27,7 @@ const ProducerService = {
       }, 500);
     } catch (error) {
       console.error(
-        `[ProducerService] Gagal mengirim pesan ke antrean ${queue}: ${error.message}`
+        `[ProducerService] Gagal mengirim pesan ke antrean ${queue}: ${error.message}`,
       );
     }
   },
