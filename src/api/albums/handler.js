@@ -25,27 +25,32 @@ class AlbumsHandler {
 
   async getAlbumByIdHandler(request) {
     const { id } = request.params;
-    const albumData = await this._albumsService.getAlbumById(id);
+    const cacheKey = `album:${id}`;
 
-    let coverUrl = albumData.cover_url;
-    if (coverUrl && !coverUrl.startsWith('http')) {
-      coverUrl = `http://${process.env.HOST || 'localhost'}:${
-        process.env.PORT || 5000
-      }/uploads/covers/${coverUrl}`;
+    try {
+      const cachedAlbum = await this._cacheService.get(cacheKey);
+      if (cachedAlbum) {
+        return {
+          status: 'success',
+          data: {
+            album: JSON.parse(cachedAlbum),
+          },
+        };
+      }
+    } catch (error) {
+      console.error(
+        `[CacheService] Gagal mengambil cache untuk ${cacheKey}:`,
+        error,
+      );
     }
 
-    const albumResponse = {
-      id: albumData.id,
-      name: albumData.name,
-      year: albumData.year,
-      coverUrl: coverUrl || null,
-      songs: albumData.songs,
-    };
+    const album = await this._albumsService.getAlbumById(id);
+    await this._cacheService.set(cacheKey, JSON.stringify(album));
 
     return {
       status: 'success',
       data: {
-        album: albumResponse,
+        album,
       },
     };
   }
@@ -56,6 +61,8 @@ class AlbumsHandler {
     const { name, year } = request.payload;
     await this._albumsService.editAlbumById(id, { name, year });
 
+    await this._cacheService.delete(`album:${id}`);
+
     return {
       status: 'success',
       message: 'Album berhasil diperbarui',
@@ -65,6 +72,10 @@ class AlbumsHandler {
   async deleteAlbumByIdHandler(request) {
     const { id } = request.params;
     await this._albumsService.deleteAlbumById(id);
+
+    await this._cacheService.delete(`album:${id}`);
+    await this._cacheService.delete(`album_likes:${id}`);
+
     return {
       status: 'success',
       message: 'Album berhasil dihapus',
@@ -84,25 +95,23 @@ class AlbumsHandler {
 
     await this._albumsService.getAlbumById(albumId);
 
-    const oldCoverFilename = await this._albumsService.getAlbumCoverFilename(
-      albumId,
-    );
-    if (oldCoverFilename) {
+    const oldCoverUrl = await this._albumsService.getAlbumCoverUrl(albumId);
+    if (oldCoverUrl) {
       try {
-        await this._storageService.deleteFile(oldCoverFilename);
+        const oldFilename = oldCoverUrl.substring(
+          oldCoverUrl.lastIndexOf('/') + 1,
+        );
+        await this._storageService.deleteFile(oldFilename);
       } catch (error) {
         console.error(
-          `[AlbumsHandler] Gagal menghapus cover lama ${oldCoverFilename}: ${error.message}`,
+          `[AlbumsHandler] Gagal menghapus cover lama: ${error.message}`,
         );
       }
     }
 
-    const filename = await this._storageService.writeFile(cover, cover.hapi);
-    const coverUrl = `http://${process.env.HOST || 'localhost'}:${
-      process.env.PORT || 5000
-    }/uploads/covers/${filename}`;
-
+    const coverUrl = await this._storageService.writeFile(cover, cover.hapi);
     await this._albumsService.addAlbumCover(albumId, coverUrl);
+    await this._cacheService.delete(`album:${albumId}`);
 
     return h
       .response({
@@ -127,7 +136,6 @@ class AlbumsHandler {
     }
 
     await this._albumsService.addUserLikeToAlbum(userId, albumId);
-
     await this._cacheService.delete(`album_likes:${albumId}`);
 
     return h
@@ -143,7 +151,6 @@ class AlbumsHandler {
     const { id: userId } = request.auth.credentials;
 
     await this._albumsService.removeUserLikeFromAlbum(userId, albumId);
-
     await this._cacheService.delete(`album_likes:${albumId}`);
 
     return h

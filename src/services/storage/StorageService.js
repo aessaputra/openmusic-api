@@ -1,39 +1,86 @@
-const fs = require('fs');
-const path = require('path');
+const { Client } = require('minio');
 
 class StorageService {
-  constructor(folder) {
-    this._folder = folder;
+  constructor() {
+    this._client = new Client({
+      endPoint: process.env.MINIO_ENDPOINT,
+      port: parseInt(process.env.MINIO_PORT, 10),
+      useSSL: process.env.MINIO_USESSL === 'true',
+      accessKey: process.env.MINIO_ACCESSKEY,
+      secretKey: process.env.MINIO_SECRETKEY,
+    });
+    this._bucketName = process.env.MINIO_BUCKETNAME;
 
-    if (!fs.existsSync(folder)) {
-      fs.mkdirSync(folder, { recursive: true });
-    }
+    this._client.bucketExists(this._bucketName, (err, exists) => {
+      if (err) {
+        console.error('Gagal memeriksa bucket:', err);
+        return;
+      }
+      if (!exists) {
+        this._client.makeBucket(this._bucketName, 'us-east-1', (makeErr) => {
+          if (makeErr) {
+            console.error('Gagal membuat bucket:', makeErr);
+          } else {
+            console.log(`Bucket ${this._bucketName} berhasil dibuat.`);
+            const policy = JSON.stringify({
+              Version: '2012-10-17',
+              Statement: [
+                {
+                  Effect: 'Allow',
+                  Principal: { AWS: ['*'] },
+                  Action: ['s3:GetObject'],
+                  Resource: [`arn:aws:s3:::${this._bucketName}/*`],
+                },
+              ],
+            });
+            this._client.setBucketPolicy(
+              this._bucketName,
+              policy,
+              (policyErr) => {
+                if (policyErr) {
+                  console.error('Gagal mengatur policy bucket:', policyErr);
+                }
+              }
+            );
+          }
+        });
+      }
+    });
   }
 
   writeFile(fileStream, meta) {
     return new Promise((resolve, reject) => {
-      const filename = +new Date() + meta.filename;
-      const filePath = path.resolve(this._folder, filename);
-      const writeStream = fs.createWriteStream(filePath);
+      const extension = meta.filename.split('.').pop();
+      const filename = `${+new Date()}.${extension}`;
 
-      writeStream.on('finish', () => resolve(filename));
-      writeStream.on('error', (error) => reject(error));
-      fileStream.pipe(writeStream);
+      this._client.putObject(
+        this._bucketName,
+        filename,
+        fileStream,
+        meta.headers['content-length'],
+        meta.headers['content-type'],
+        (err) => {
+          if (err) {
+            return reject(err);
+          }
+          const publicUrl = `http://${process.env.MINIO_ENDPOINT}:${process.env.MINIO_PORT}/${this._bucketName}/${filename}`;
+          resolve(publicUrl);
+        }
+      );
     });
   }
 
   deleteFile(filename) {
     return new Promise((resolve, reject) => {
-      const filePath = path.resolve(this._folder, filename);
-      fs.unlink(filePath, (error) => {
-        if (error) {
-          if (error.code === 'ENOENT') {
+      this._client.removeObject(this._bucketName, filename, (err) => {
+        if (err) {
+          if (err.code === 'NoSuchKey') {
             console.warn(
-              `[StorageService] File ${filename} tidak ditemukan saat mencoba menghapus.`,
+              `[StorageService] File ${filename} tidak ditemukan saat mencoba menghapus.`
             );
             return resolve();
           }
-          return reject(error);
+          return reject(err);
         }
         resolve();
       });

@@ -22,7 +22,7 @@ class AlbumsService {
 
   async getAlbumById(id) {
     const albumQuery = {
-      text: 'SELECT id, name, year, cover_url FROM albums WHERE id = $1',
+      text: 'SELECT id, name, year, cover_url as coverUrl FROM albums WHERE id = $1',
       values: [id],
     };
     const albumResult = await this._pool.query(albumQuery);
@@ -78,7 +78,7 @@ class AlbumsService {
     }
   }
 
-  async getAlbumCoverFilename(albumId) {
+  async getAlbumCoverUrl(albumId) {
     const query = {
       text: 'SELECT cover_url FROM albums WHERE id = $1',
       values: [albumId],
@@ -87,17 +87,7 @@ class AlbumsService {
     if (!result.rowCount) {
       throw new NotFoundError('Album tidak ditemukan');
     }
-    const coverUrl = result.rows[0].cover_url;
-    if (coverUrl && coverUrl.startsWith('http')) {
-      try {
-        const urlParts = new URL(coverUrl);
-        const pathParts = urlParts.pathname.split('/');
-        return pathParts[pathParts.length - 1];
-      } catch (error) {
-        return coverUrl;
-      }
-    }
-    return coverUrl;
+    return result.rows[0].cover_url;
   }
 
   async addUserLikeToAlbum(userId, albumId) {
