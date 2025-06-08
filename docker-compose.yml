@@ -1,0 +1,77 @@
+services:
+  db:
+    image: postgres:13
+    restart: always
+    environment:
+      POSTGRES_USER: ${PGUSER}
+      POSTGRES_PASSWORD: ${PGPASSWORD}
+      POSTGRES_DB: ${PGDATABASE}
+    ports:
+      - '${PGPORT}:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${PGUSER} -d ${PGDATABASE}']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:latest
+    restart: always
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    restart: always
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    ports:
+      - '5672:5672'
+      - '15672:15672'
+
+  minio:
+    image: minio/minio
+    restart: always
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESSKEY}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRETKEY}
+    ports:
+      - '9000:9000'
+      - '9001:9001'
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+
+  api:
+    build: .
+    restart: always
+    ports:
+      - '${PORT}:${PORT}'
+    env_file:
+      - .env
+    depends_on:
+      - db
+      - redis
+      - rabbitmq
+      - minio
+
+  consumer:
+    build:
+      context: ./openmusic-consumer-v3
+      dockerfile: Dockerfile
+    restart: always
+    env_file:
+      - ./openmusic-consumer-v3/.env
+    depends_on:
+      - db
+      - rabbitmq
+
+volumes:
+  postgres_data:
+  redis_data:
+  minio_data:
